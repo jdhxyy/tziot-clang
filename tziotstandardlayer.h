@@ -11,17 +11,15 @@
 #include "utz.h"
 
 // TZIotStandardLayerRxCallback 接收回调函数
-typedef void (*TZIotStandardLayerRxCallback)(uint8_t* data, int size, UtzStandardHeader* standardHeader, uint64_t pipe, 
-    uint8_t* ip, int port);
+typedef void (*TZIotStandardLayerRxCallback)(uint8_t* data, int size, UtzStandardHeader* standardHeader, uint64_t pipe);
 
 // TZIotStandardLayerRx 标准层接收
-void TZIotStandardLayerRx(uint64_t pipe, uint8_t* data, int size, uint8_t* ip, int port);
+void TZIotStandardLayerRx(uint64_t pipe, uint8_t* data, int size);
 
 // TZIotStandardLayerRegisterRxObserver 注册观察者
 void TZIotStandardLayerRegisterRxObserver(TZIotStandardLayerRxCallback callback);
 
 // TZIotStandardLayerSend 基于标准头部发送
-void TZIotStandardLayerSend(uint8_t* data, int dataLen, UtzStandardHeader* standardHeader, uint64_t pipe, 
-    uint8_t* ip, int port);
+void TZIotStandardLayerSend(uint8_t* data, int dataLen, UtzStandardHeader* standardHeader, uint64_t pipe);
 
 #endif

@@ -67,7 +67,7 @@ static void dcomSend(int protocol, uint64_t pipe, uint64_t dstIA, uint8_t* bytes
     header.SrcIA = TZIotGetLocalIA();
     header.DstIA = dstIA;
 
-    TZIotStandardLayerSend(flpFrame->buf, flpFrame->len, &header, pipe, pipe);
+    TZIotStandardLayerSend(flpFrame->buf, flpFrame->len, &header, pipe);
 }
 
 // dcomDealStandardLayerRx 处理标准层回调函数
@@ -83,9 +83,4 @@ static void dcomDealStandardLayerRx(uint8_t* data, int size, UtzStandardHeader* 
     }
     DComReceive(TZIOT_PROTOCOL_NUM, pipe, standardHeader->SrcIA, body->buf, body->len);
     TZFree(body);
-}
-
-// TZIotDComIsInit 是否初始化
-bool TZIotDComIsInit(void) {
-    return isInit;
 }

@@ -11,3 +11,4 @@ https://github.com/jdhxyy/tzbox.git
 https://github.com/jdhxyy/knock-clang.git
 https://github.com/jdhxyy/async-clang.git
 https://github.com/jdhxyy/tztype-clang.git
+https://github.com/jdhxyy/tzaccess-clang.git

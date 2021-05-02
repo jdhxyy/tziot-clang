@@ -15,9 +15,6 @@ void TZIotPipeInit(void);
 bool TZIotPipeIsAllowSend(uint64_t pipe);
 
 // TZIotPipeSend 管道发送
-void TZIotPipeSend(uint64_t pipe, uint8_t* data, int size, uint8_t* ip, int port);
-
-// TZIotGetFirstPipe 读取第一管道
-uint64_t TZIotGetFirstPipe(void);
+void TZIotPipeSend(uint64_t pipe, uint8_t* data, int size);
 
 #endif

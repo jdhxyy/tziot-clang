@@ -6,12 +6,8 @@
 #define TZIOT_DCOM_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 // TZIotDComInit 初始化
 void TZIotDComInit(void);
-
-// TZIotDComIsInit 是否初始化
-bool TZIotDComIsInit(void);
 
 #endif

@@ -16,18 +16,9 @@
 // 内存id
 int TZIotMid = -1;
 
-// 父节点信息
-ParentInfo Parent;
-
 // 本机单播地址
 static uint64_t localIA = 0;
 static char* localPwd = NULL;
-
-// 核心网参数
-static uint64_t coreIA = TZIOT_CORE_IA;
-static uint8_t coreIP[4] = {0};
-static uint16_t corePort = TZIOT_CORE_PORT;
-static uint64_t corePipe = 0;
 
 // dcom参数
 // dcom重发次数
@@ -37,29 +28,6 @@ static int dcomRetryInterval = TZIOT_DCOM_RETRY_INTERVAL;
 
 // 连接模式
 static bool isDirectConn = true;
-
-// TZIotConfigInit 初始化
-void TZIotConfigInit(void) {
-    int arr[4] = {0};
-    sscanf(TZIOT_CORE_IP, "%d.%d.%d.%d", &arr[0], &arr[1], &arr[2], &arr[3]);
-    for (int i = 0; i < 4; i++) {
-        coreIP[i] = (uint8_t)arr[i];
-    }
-    corePipe = DComAddrToPipe(coreIP, corePort);
-}
-
-// TZIotConfigCoreParam 配置核心网参数
-void TZIotConfigCoreParam(uint64_t ia, char* ip, uint16_t port) {
-    coreIA = ia;
-
-    int arr[4] = {0};
-    sscanf(ip, "%d.%d.%d.%d", &arr[0], &arr[1], &arr[2], &arr[3]);
-    for (int i = 0; i < 4; i++) {
-        coreIP[i] = (uint8_t)arr[i];
-    }
-    corePort = port;
-    corePipe = DComAddrToPipe(coreIP, corePort);
-}
 
 // TZIotConfigDComParam 配置dcom参数
 // retryNum: 重发次数
@@ -98,16 +66,6 @@ void TZIotSetLocalPwd(char* pwd) {
 // TZIotGetLocalPwd 读取密码
 char* TZIotGetLocalPwd(void) {
     return localPwd;
-}
-
-// TZIotGetCoreIA 读取核心网IA地址
-uint64_t TZIotGetCoreIA(void) {
-    return coreIA;
-}
-
-// TZIotGetCorePipe 读取核心网管道
-uint64_t TZIotGetCorePipe(void) {
-    return corePipe;
 }
 
 // TZIotGetDComRetryNum 读取dcom重发次数

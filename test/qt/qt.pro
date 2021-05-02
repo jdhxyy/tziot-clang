@@ -4,14 +4,16 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
+    ../../lib/tzaccess-clang/tzaccess.c \
+    ../../lib/tzaccess-clang/tzaccessapply.c \
+    ../../lib/tzaccess-clang/tzaccessconfig.c \
+    ../../lib/tzaccess-clang/tzaccessconn.c \
+    ../../lib/tzaccess-clang/tzaccessparsecmp.c \
+    ../../lib/tzaccess-clang/tzaccessstandardlayer.c \
         main.c \
     ../../tziot.c \
-    ../../tziotapply.c \
     ../../tziotconfig.c \
-    ../../tziotconn.c \
     ../../tziotdcom.c \
-    ../../tziotload.c \
-    ../../tziotparsecmp.c \
     ../../tziotpipe.c \
     ../../tziotstandardlayer.c \
     ../../lib/async-clang/async.c \
@@ -55,16 +57,20 @@ INCLUDEPATH += ../../ \
     ../../lib/tzbox \
     ../../lib/knock-clang \
     ../../lib/async-clang \
-    ../../lib/tztype-clang
+    ../../lib/tztype-clang \
+    ../../lib/tzaccess-clang
 
 HEADERS += \
+    ../../lib/tzaccess-clang/tzaccess.h \
+    ../../lib/tzaccess-clang/tzaccessapply.h \
+    ../../lib/tzaccess-clang/tzaccessconfig.h \
+    ../../lib/tzaccess-clang/tzaccessconn.h \
+    ../../lib/tzaccess-clang/tzaccessparsecmp.h \
+    ../../lib/tzaccess-clang/tzaccessstandardlayer.h \
     ../../tziot.h \
-    ../../tziotapply.h \
     ../../tziotconfig.h \
-    ../../tziotconn.h \
     ../../tziotdcom.h \
     ../../tziotload.h \
-    ../../tziotparsecmp.h \
     ../../tziotpipe.h \
     ../../tziotstandardlayer.h \
     ../../lib/async-clang/async.h \

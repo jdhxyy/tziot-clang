@@ -7,6 +7,7 @@
 
 #include "dcom.h"
 #include "tztype.h"
+#include "tzaccess.h"
 
 // TZIotNetSendFunc 网络管道发送函数类型
 // dstIP是目标IP地址,4字节数组.dstPort是目标端口号
@@ -14,16 +15,16 @@ typedef void (*TZIotNetSendFunc)(uint8_t* data, int size, uint8_t* dstIP, int ds
 
 // TZIotLoad 模块载入
 // mid是内存ID.ia是本节点IA地址,pwd是本节点密码
-void TZIotLoad(int mid, uint64_t ia, char* pwd);
+void TZIotLoad(uint64_t ia, char* pwd);
 
-// TZIotBindPipe 绑定管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
-// 注意:绑定的第一个网络管道是连接核心网的管道
-uint64_t TZIotBindPipeNet(TZIotNetSendFunc send, TZIsAllowSendFunc isAllowSend);
+// TZIotBindPipeCore 绑定核心网管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
+// 注意:核心网管道只能绑定一个
+uint64_t TZIotBindPipeCore(TZAccessSendFunc send, TZIsAllowSendFunc isAllowSend);
 
-// TZIotPipeNetReceive 网络管道接收.pipe是接收管道号
-// dstIP是目标IP地址,4字节数组.dstPort是目标端口号
+// TZIotPipeCoreReceive 核心网管道接收.pipe是接收管道号
+// srcIP是源IP地址,4字节数组.srcPort是源端口号
 // 用户在管道中接收到数据时需回调本函数
-void TZIotPipeNetReceive(uint64_t pipe, uint8_t* data, int size, uint8_t* dstIP, int dstPort);
+void TZIotPipeCoreReceive(uint8_t* data, int size, uint8_t* srcIP, uint16_t srcPort);
 
 // TZIotBindPipe 绑定管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
 uint64_t TZIotBindPipe(TZDataFunc send, TZIsAllowSendFunc isAllowSend);
@@ -55,8 +56,12 @@ int TZIotCall(intptr_t handle);
 // TZIotIsConn 是否连接核心网
 bool TZIotIsConn(void);
 
-// TZIotConfigCoreParam 配置核心网参数
-void TZIotConfigCoreParam(uint64_t ia, char* ip, uint16_t port);
+// TZIotGetParentAddr 读取父节点的地址
+// ip地址是四字节数组.如果父节点不存在,则ip和port都为0
+void TZIotGetParentAddr(uint8_t* ip, uint16_t* port);
+
+// TZIotConfigCoreParam 配置核心网参数.ip是4字节数组
+void TZIotConfigCoreParam(uint64_t ia, uint8_t* ip, uint16_t port);
 
 // TZIotConfigDComParam 配置dcom参数
 // retryNum: 重发次数

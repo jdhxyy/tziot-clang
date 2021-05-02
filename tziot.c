@@ -5,11 +5,30 @@
 #include "tziot.h"
 #include "tziotconfig.h"
 #include "tziotpipe.h"
+#include "tziotdcom.h"
 
 #include "dcom.h"
 #include "utz.h"
+#include "tzaccess.h"
+#include "tzmalloc.h"
 
 #include <string.h>
+
+// TZIotLoad 模块载入
+// ia是本节点IA地址,pwd是本节点密码
+void TZIotLoad(uint64_t ia, char* pwd) {
+    TZIotMid = TZMallocRegister(0, TZIOT_TAG, TZIOT_MALLOC_SIZE);
+    if (TZIotMid == -1) {
+        LE(TZIOT_TAG, "malloc register failed!");
+        return;
+    }
+
+    TZIotSetLocalIA(ia);
+    TZIotSetLocalPwd(pwd);
+
+    TZIotPipeInit();
+    TZIotDComInit();
+}
 
 // TZIotCallCreateHandle 创建同步调用句柄
 // pipe是通信管道
@@ -20,7 +39,7 @@
 // 返回句柄.非0表示创建成功
 intptr_t TZIotCallCreateHandle(uint64_t pipe, uint64_t dstIA, int rid, int timeout, uint8_t* req, int reqLen,
     uint8_t** resp, int* respLen, int* result) {
-    if (Parent.IA == UTZ_IA_INVALID || Parent.IsConn == false) {
+    if (TZIotIsConn() == false) {
         if (result != NULL) {
             *result = DCOM_SYSTEM_ERROR_CODE_RX_TIMEOUT;
         }
@@ -41,4 +60,20 @@ int TZIotCall(intptr_t handle) {
 // 如果注册失败,原因是内存不足
 bool TZIotRegister(int rid, DComCallbackFunc callback) {
     return DComRegister(TZIOT_PROTOCOL_NUM, rid, callback);
+}
+
+// TZIotIsConn 是否连接核心网
+bool TZIotIsConn(void) {
+    return TZAccessIsConn();
+}
+
+// TZIotGetParentAddr 读取父节点的地址
+// ip地址是四字节数组.如果父节点不存在,则ip和port都为0
+void TZIotGetParentAddr(uint8_t* ip, uint16_t* port) {
+    TZAccessGetParentAddr(ip, port);
+}
+
+// TZIotConfigCoreParam 配置核心网参数
+void TZIotConfigCoreParam(uint64_t ia, uint8_t* ip, uint16_t port) {
+    TZAccessConfigCoreParam(ia, ip, port);
 }

@@ -28,7 +28,7 @@ static void notifyObserver(uint8_t* data, int size, UtzStandardHeader* header, u
 static TZListNode* createNode(void);
 
 // TZIotStandardLayerRx 标准层接收
-void TZIotStandardLayerRx(uint64_t pipe, uint8_t* data, int size, uint8_t* ip, int port) {
+void TZIotStandardLayerRx(uint64_t pipe, uint8_t* data, int size) {
     UtzStandardHeader header;
     int offset = getStandardHeader(data, size, &header);
     if (offset == 0) {
@@ -83,6 +83,7 @@ void TZIotStandardLayerRegisterRxObserver(TZIotStandardLayerRxCallback callback)
     }
     tItem* item = (tItem*)node->Data;
     item->callback = callback;
+    TZListAppend(list, node);
 }
 
 static TZListNode* createNode(void) {
@@ -99,8 +100,7 @@ static TZListNode* createNode(void) {
 }
 
 // TZIotStandardLayerSend 基于标准头部发送
-void TZIotStandardLayerSend(uint8_t* data, int dataLen, UtzStandardHeader* standardHeader, uint64_t pipe, 
-    uint8_t* ip, int port) {
+void TZIotStandardLayerSend(uint8_t* data, int dataLen, UtzStandardHeader* standardHeader, uint64_t pipe) {
     if (dataLen > TZIOT_FRAME_MAX_LEN) {
         LE(TZIOT_TAG, "standard layer send failed!data len is too long:%d src ia:0x%llx dst ia:0x%llx", dataLen, 
             standardHeader->SrcIA, standardHeader->DstIA);
@@ -117,7 +117,7 @@ void TZIotStandardLayerSend(uint8_t* data, int dataLen, UtzStandardHeader* stand
         return;
     }
     (void)UtzStandardHeaderToBytes(standardHeader, frame, UTZ_NLV1_HEAD_LEN);
-    memcpy(frame + UTZ_NLV1_HEAD_LEN, data, (uint64_t)dataLen);
-    TZIotPipeSend(pipe, frame, frameSize, ip, port);
+    memcpy(frame + UTZ_NLV1_HEAD_LEN, data, (size_t)dataLen);
+    TZIotPipeSend(pipe, frame, frameSize);
     TZFree(frame);
 }

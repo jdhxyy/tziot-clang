@@ -4,7 +4,6 @@
 
 #include "tziotpipe.h"
 #include "tziot.h"
-#include "tziotload.h"
 #include "tziotconfig.h"
 #include "tziotstandardlayer.h"
 
@@ -12,22 +11,27 @@
 #include "tzmalloc.h"
 #include "lagan.h"
 #include "tzbox.h"
+#include "tzaccess.h"
+#include "tztype.h"
 
 #include <string.h>
+
+#define PIPE_CORE 1
 
 #pragma pack(1)
 
 typedef struct {
     uint64_t pipe;
-    TZIotSendFunc send;
-    TZIotIsAllowSendFunc isAllowSend;
+    TZDataFunc send;
+    TZIsAllowSendFunc isAllowSend;
 } tItem;
 
 #pragma pack()
 
 static intptr_t list = 0;
-// 申请和连接从机默认从第一管道走
-static uint64_t firstPipe = 0;
+
+static TZAccessSendFunc corePipeSend = NULL;
+static TZIsAllowSendFunc corePipeIsAllowSend = NULL;
 
 static TZListNode* createNode(void);
 static uint64_t getPipeNum(void);
@@ -38,31 +42,30 @@ void TZIotPipeInit(void) {
     list = TZListCreateList(TZIotMid);
     if (list == 0) {
         LE(TZIOT_TAG, "bind pipe failed!create list failed");
-        return 0;
+    }
+}
+
+// TZIotBindPipeCore 绑定核心网管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
+// 注意:核心网管道只能绑定一个
+uint64_t TZIotBindPipeCore(TZAccessSendFunc send, TZIsAllowSendFunc isAllowSend) {
+    corePipeSend = send;
+    corePipeIsAllowSend = isAllowSend;
+    TZAccessLoad(TZIotGetLocalIA(), TZIotGetLocalPwd(), send, isAllowSend);
+    return PIPE_CORE;
+}
+
+// TZIotPipeCoreReceive 核心网管道接收.pipe是接收管道号
+// srcIP是源IP地址,4字节数组.srcPort是源端口号
+// 用户在管道中接收到数据时需回调本函数
+void TZIotPipeCoreReceive(uint8_t* data, int size, uint8_t* srcIP, uint16_t srcPort) {
+    TZAccessReceive(data, size, srcIP, srcPort);
+    if (TZAccessIsConn()) {
+        TZIotStandardLayerRx(PIPE_CORE, data, size);
     }
 }
 
 // TZIotBindPipe 绑定管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
-// 注意:绑定的第一个网络管道是连接核心网的管道
-uint64_t TZIotBindPipeNet(TZIotNetSendFunc send, TZIsAllowSendFunc isAllowSend) {
-
-}
-
-// TZIotBindPipe 绑定管道.绑定成功后返回管道号,管道号如果是0表示绑定失败
-uint64_t TZIotBindPipe(TZDataFunc send, TZIsAllowSendFunc isAllowSend); {
-    static bool first = true;
-
-    if (first) {
-        first = false;
-        TZIotMid = mid;
-        list = TZListCreateList(TZIotMid);
-        if (list == 0) {
-            LE(TZIOT_TAG, "bind pipe failed!create list failed");
-            return 0;
-        }
-        TZIotInitSystem();
-    }
-    
+uint64_t TZIotBindPipe(TZDataFunc send, TZIsAllowSendFunc isAllowSend) {
     TZListNode* node = createNode();
     if (node == NULL) {
         LE(TZIOT_TAG, "bind pipe failed!create node failed");
@@ -74,10 +77,6 @@ uint64_t TZIotBindPipe(TZDataFunc send, TZIsAllowSendFunc isAllowSend); {
     item->send = send;
     item->isAllowSend = isAllowSend;
     TZListAppend(list, node);
-
-    if (firstPipe == 0) {
-        firstPipe = item->pipe;
-    }
     return item->pipe;
 }
 
@@ -95,20 +94,23 @@ static TZListNode* createNode(void) {
 }
 
 static uint64_t getPipeNum(void) {
-    static uint64_t pipeNum = 0;
+    static uint64_t pipeNum = PIPE_CORE;
     pipeNum++;
     return pipeNum;
 }
 
 // TZIotPipeReceive 管道接收.pipe是接收管道号
-// ip是4字节数组,port是端口号.如果是网络管道则需要使用这两个参数.不需要使用ip可设置为NULL,port设置为0
 // 用户在管道中接收到数据时需回调本函数
-void TZIotPipeReceive(uint64_t pipe, uint8_t* data, int size, uint8_t* ip, int port) {
-	TZIotStandardLayerRx(pipe, data, size, ip, port);
+void TZIotPipeReceive(uint64_t pipe, uint8_t* data, int size) {
+	TZIotStandardLayerRx(pipe, data, size);
 }
 
 // TZIotPipeIsAllowSend 管道是否允许发送
 bool TZIotPipeIsAllowSend(uint64_t pipe) {
+    if (pipe == PIPE_CORE) {
+        return corePipeIsAllowSend() && TZAccessIsConn();
+    }
+
     tItem* item = getItem(pipe);
     if (item == NULL) {
         return false;
@@ -135,15 +137,21 @@ static tItem* getItem(uint64_t pipe) {
 }
 
 // TZIotPipeSend 管道发送
-void TZIotPipeSend(uint64_t pipe, uint8_t* data, int size, uint8_t* ip, int port) {
-    tItem* item = getItem(srcPipe);
+void TZIotPipeSend(uint64_t pipe, uint8_t* data, int size) {
+    if (pipe == PIPE_CORE) {
+        uint8_t ip[4] = {0};
+        uint16_t port = 0;
+        TZAccessGetParentAddr(ip, &port);
+        if (port == 0) {
+            return;
+        }
+        corePipeSend(data, size, ip, port);
+        return;
+    }
+
+    tItem* item = getItem(pipe);
     if (item == NULL) {
         return;
     }
-    item->send(dstPipe, data, size, ip, port);
-}
-
-// TZIotGetFirstPipe 读取第一管道
-uint64_t TZIotGetFirstPipe(void) {
-    return firstPipe;
+    item->send(data, size);
 }
