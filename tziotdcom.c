@@ -16,8 +16,6 @@
 
 #include <string.h>
 
-static bool isInit = false;
-
 static int dcomRun(void);
 static void dcomSend(int protocol, uint64_t pipe, uint64_t dstIA, uint8_t* bytes, int size);
 
@@ -36,7 +34,6 @@ void TZIotDComInit(void) {
     AsyncStart(dcomRun, ASYNC_NO_WAIT);
 
     TZIotStandardLayerRegisterRxObserver(dcomDealStandardLayerRx);
-    isInit = true;
 }
 
 static int dcomRun(void) {
@@ -68,6 +65,7 @@ static void dcomSend(int protocol, uint64_t pipe, uint64_t dstIA, uint8_t* bytes
     header.DstIA = dstIA;
 
     TZIotStandardLayerSend(flpFrame->buf, flpFrame->len, &header, pipe);
+    TZFree(flpFrame);
 }
 
 // dcomDealStandardLayerRx 处理标准层回调函数
