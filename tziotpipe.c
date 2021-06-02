@@ -107,8 +107,12 @@ void TZIotPipeReceive(uint64_t pipe, uint8_t* data, int size) {
 
 // TZIotPipeIsAllowSend 管道是否允许发送
 bool TZIotPipeIsAllowSend(uint64_t pipe) {
+    if (TZAccessIsConn() == false) {
+        return false;
+    }
+    
     if (pipe == PIPE_CORE) {
-        return corePipeIsAllowSend() && TZAccessIsConn();
+        return corePipeIsAllowSend();
     }
 
     tItem* item = getItem(pipe);
